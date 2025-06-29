@@ -15,6 +15,14 @@ impl Program{
         }
     }
 
+    pub fn get_ast(&self) -> &Vec<LispObject> {
+        &self.ast
+    }
+
+    pub fn get_sym_tab(&mut self) -> &mut sym_tab {
+        &mut self.symtab
+    }
+
     fn read_eof(prog: &mut String) -> io::Result<()> {
         let mut instr: String = String::new();
         let stdin = io::stdin();
