@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 lisp_parser = "0.1.3"
+rand = "0.9.1"

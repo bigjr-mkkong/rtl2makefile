@@ -1,6 +1,7 @@
 use lisp_parser::LispObject;
 use crate::types::*;
 use crate::frontend::*;
+use crate::generator::circgen;
 
 fn eval_let_wire(deflist: &Vec<LispObject>, env: &mut sym_tab) {
 
@@ -12,7 +13,12 @@ fn eval_let_wire(deflist: &Vec<LispObject>, env: &mut sym_tab) {
             }
 
             LispObject::String(var_name) => {
-                env.insert(&var_name, rtl_types::wire);
+                if let Some(_) = env.get(&var_name) {
+                    println!("Variable {} already defined", var_name);
+                    panic!();
+                } else {
+                    env.insert(&var_name, rtl_types::wire);
+                }
                 println!("eval_let_reg: insert {} as wire", var_name);
             }
         }
@@ -29,7 +35,12 @@ fn eval_let_reg(deflist: &Vec<LispObject>, env: &mut sym_tab) {
             }
 
             LispObject::String(var_name) => {
-                env.insert(&var_name, rtl_types::dff);
+                if let Some(_) = env.get(&var_name) {
+                    println!("Variable {} already defined", var_name);
+                    panic!();
+                } else {
+                    env.insert(&var_name, rtl_types::dff);
+                }
                 println!("eval_let_reg: insert {} as reg", var_name);
             }
         }
@@ -89,7 +100,33 @@ fn eval_let(curr: &Vec<LispObject>, env: &mut sym_tab) -> symbol {
 
 fn apply(op: &str, list: &Vec<LispObject>, env: &mut sym_tab) -> symbol {
     //handle circuit connection
-    todo!()
+    //for now each oprand only correspond to 2 parameters
+    let mut symvec: Vec<symbol> = Vec::new();
+
+    for parms in &list[1..]{
+        symvec.push(eval(parms, env));
+    }
+
+    match op {
+        "circ" => {
+            println!("Success");
+            symbol{
+                literal: None,
+                typ: rtl_types::nodef,
+                val: None
+            }
+        },
+
+        "conn"| 
+        "+"|"-"|"*"|"/"|
+        "&"|"|"|"!" => {
+            circgen(op, &symvec, env)
+        }
+        _ => {
+            println!("Unsupported oprand {}", op);
+            panic!();
+        }
+    }
 }
 
 
@@ -100,10 +137,15 @@ pub fn eval(curr: &LispObject, env: &mut sym_tab) -> symbol{
                 symbol{
                     literal: None,
                     typ: rtl_types::constant,
-                    val: Some(n)
+                    val: Some(114514)
                 }
             } else {
-                env.get(sstr).clone()
+                if let Some(ssym) = env.get(sstr) {
+                    ssym.clone()
+                } else {
+                    println!("Symbol {} undefined", sstr);
+                    panic!();
+                }
             }
         }
 

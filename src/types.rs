@@ -12,7 +12,7 @@ pub enum rtl_types{
 pub struct symbol{
     pub typ: rtl_types,
     pub val: Option<i32>,
-    pub literal: Option<String>
+    pub literal: Option<String>,
 }
 
 pub struct sym_tab{
@@ -68,7 +68,8 @@ impl sym_tab{
         self.tab.remove(name);
     }
 
-    pub fn get(&self, name: &String) -> &symbol {
-        self.tab.get(name).expect(&format!("Symbol {} not defined yet", name))
-    }
+    pub fn get(&self, name: &str) -> Option<&symbol> {
+    self.tab.get(name)
+}
+
 }

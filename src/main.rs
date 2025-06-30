@@ -9,13 +9,14 @@ fn main() {
     let mut symtab: sym_tab = sym_tab::new();
 
     prog.read_n_parse();
-    prog.print_ast();
+    // prog.print_ast();
 
-    // for lprog in prog.get_ast() {
-    //     eval(lprog, &mut symtab);
-    // }
+    for lprog in prog.get_ast() {
+        eval(lprog, &mut symtab);
+    }
 }
 
 mod frontend;
 mod types;
 mod eval;
+mod generator;
