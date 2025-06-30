@@ -8,7 +8,7 @@ fn main() {
     let mut prog: Program = Program::new();
     let mut symtab: sym_tab = sym_tab::new();
 
-    prog.read_n_parse().expect("Parse failed");
+    prog.read_n_parse();
     prog.print_ast();
 
     // for lprog in prog.get_ast() {

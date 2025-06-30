@@ -44,13 +44,21 @@ impl Program{
         Ok(())
     }
 
-    pub fn read_n_parse(&mut self) -> LispProgramParsingResult {
+    pub fn read_n_parse(&mut self) {
         let mut program: String = String::new();
         Self::read_eof(&mut program).expect("Reader failed");
 
         let program = program.as_str();
 
-        lisp_parser::parse_lisp_program(program)
+        let pret = lisp_parser::parse_lisp_program(program);
+        match pret {
+            Ok(ast) => {
+                self.ast = ast;
+            },
+            Err(_) => {
+                panic!("Parse failed");
+            }
+        }
     }
 
     fn ast_printer(u: &lisp_parser::LispObject) {
