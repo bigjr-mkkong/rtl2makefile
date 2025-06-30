@@ -4,7 +4,8 @@ use std::collections::HashMap;
 pub enum rtl_types{
     wire,
     dff,
-    constant
+    constant,
+    nodef
 }
 
 #[derive(Clone)]
@@ -49,6 +50,14 @@ impl sym_tab{
                     literal: None,
                     typ: rtl_types::constant,
                     val: Some(name.parse::<i32>().expect("Symbol is not a constant"))
+                }
+            }
+
+            rtl_types::nodef => {
+                symbol {
+                    literal: None,
+                    typ: rtl_types::nodef,
+                    val: None
                 }
             }
         };

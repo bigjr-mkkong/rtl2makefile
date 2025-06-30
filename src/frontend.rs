@@ -3,14 +3,12 @@ use lisp_parser::*;
 use crate::types::*;
 
 pub struct Program{
-    symtab: sym_tab,
     ast: Vec<LispObject>,
 }
 
 impl Program{
     pub fn new() -> Self{
         Self{
-            symtab: sym_tab::new(),
             ast: Vec::new()
         }
     }
@@ -19,9 +17,6 @@ impl Program{
         &self.ast
     }
 
-    pub fn get_sym_tab(&mut self) -> &mut sym_tab {
-        &mut self.symtab
-    }
 
     fn read_eof(prog: &mut String) -> io::Result<()> {
         let mut instr: String = String::new();
@@ -46,7 +41,6 @@ impl Program{
             }
         }
 
-        println!("Program output: {}", prog);
         Ok(())
     }
 
