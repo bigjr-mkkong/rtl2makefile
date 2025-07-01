@@ -20,6 +20,11 @@ fn main() {
         eval(lprog, &mut symtab, &mut comp_result);
     }
 
+    println!("Signal Watchlist:");
+    for strs in comp_result.watchlist{
+        println!("{}", strs);
+    }
+
 }
 
 mod frontend;

@@ -109,6 +109,12 @@ fn apply<W: Write>(op: &str, list: &Vec<LispObject>, env: &mut sym_tab, buf: &mu
 
     match op {
         "circ" => {
+            for s in symvec {
+                buf.watchlist.push(s.literal.unwrap());
+            }
+            for regs in env.get_all_regs() {
+                buf.watchlist.push(regs.literal.clone().unwrap());
+            }
             finalize(env, buf);
             symbol{
                 literal: None,
