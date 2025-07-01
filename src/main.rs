@@ -26,11 +26,16 @@ fn main() -> io::Result<()>{
 
     let generated = String::from_utf8(comp_result.outbuf).expect("failed to convert vec<u8> to string");
 
+    let mut watchlist = File::create("./fsig/flist")?;
+    let mut watchlist_str = String::new();
+
     let mut final_makefile = String::new();
+
     final_makefile.push_str(".PHONY: ");
 
     for line in &comp_result.watchlist {
         final_makefile.push_str(&format!("{} ", line));
+        watchlist_str.push_str(&format!("{}\n", line));
     }
     final_makefile.push('\n');
 
@@ -38,6 +43,8 @@ fn main() -> io::Result<()>{
 
     let mut file = File::create("./fsig/Makefile")?;
     file.write_all(final_makefile.as_bytes())?;
+
+    watchlist.write_all(watchlist_str.as_bytes())?;
 
     Ok(())
 
