@@ -69,7 +69,17 @@ impl sym_tab{
     }
 
     pub fn get(&self, name: &str) -> Option<&symbol> {
-    self.tab.get(name)
-}
+        self.tab.get(name)
+    }
 
+    pub fn get_all_regs(&self) -> Vec<&symbol> {
+        let mut retvec: Vec<&symbol> = Vec::new();
+        for (k, v) in &self.tab {
+            if let rtl_types::dff = v.typ {
+                retvec.push(&v);
+            }
+        }
+
+        retvec
+    }
 }

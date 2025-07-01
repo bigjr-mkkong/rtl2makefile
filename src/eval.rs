@@ -2,6 +2,8 @@ use lisp_parser::LispObject;
 use crate::types::*;
 use crate::frontend::*;
 use crate::generator::circgen;
+use std::io::{self, Write};
+use crate::generator::{Final_out, finalize};
 
 fn eval_let_wire(deflist: &Vec<LispObject>, env: &mut sym_tab) {
 
@@ -19,7 +21,6 @@ fn eval_let_wire(deflist: &Vec<LispObject>, env: &mut sym_tab) {
                 } else {
                     env.insert(&var_name, rtl_types::wire);
                 }
-                println!("eval_let_reg: insert {} as wire", var_name);
             }
         }
     }
@@ -41,7 +42,6 @@ fn eval_let_reg(deflist: &Vec<LispObject>, env: &mut sym_tab) {
                 } else {
                     env.insert(&var_name, rtl_types::dff);
                 }
-                println!("eval_let_reg: insert {} as reg", var_name);
             }
         }
     }
@@ -98,18 +98,18 @@ fn eval_let(curr: &Vec<LispObject>, env: &mut sym_tab) -> symbol {
     }
 }
 
-fn apply(op: &str, list: &Vec<LispObject>, env: &mut sym_tab) -> symbol {
+fn apply<W: Write>(op: &str, list: &Vec<LispObject>, env: &mut sym_tab, buf: &mut Final_out<W>) -> symbol {
     //handle circuit connection
     //for now each oprand only correspond to 2 parameters
     let mut symvec: Vec<symbol> = Vec::new();
 
     for parms in &list[1..]{
-        symvec.push(eval(parms, env));
+        symvec.push(eval::<W>(parms, env, buf));
     }
 
     match op {
         "circ" => {
-            println!("Success");
+            finalize(env, buf);
             symbol{
                 literal: None,
                 typ: rtl_types::nodef,
@@ -120,7 +120,7 @@ fn apply(op: &str, list: &Vec<LispObject>, env: &mut sym_tab) -> symbol {
         "conn"| 
         "+"|"-"|"*"|"/"|
         "&"|"|"|"!" => {
-            circgen(op, &symvec, env)
+            circgen(op, &symvec, env, buf)
         }
         _ => {
             println!("Unsupported oprand {}", op);
@@ -130,7 +130,7 @@ fn apply(op: &str, list: &Vec<LispObject>, env: &mut sym_tab) -> symbol {
 }
 
 
-pub fn eval(curr: &LispObject, env: &mut sym_tab) -> symbol{
+pub fn eval<W: Write>(curr: &LispObject, env: &mut sym_tab, buf: &mut Final_out<W>) -> symbol{
     match curr {
         LispObject::String(sstr) => {
             if let Ok(n) = sstr.parse::<i32>() {
@@ -154,13 +154,14 @@ pub fn eval(curr: &LispObject, env: &mut sym_tab) -> symbol{
                 LispObject::String(op) => {
                     match op.as_str(){
                         "let" => {
-                            eval_let(list, env)
+                            eval_let(list, env);
+                            eval(&list[2], env, buf)
                         }
 
                         "circ"|"conn"| 
                         "+"|"-"|"*"|"/"|
                         "&"|"|"|"!" => {
-                            apply(op, list, env)
+                            apply::<W>(op, list, env, buf)
                         }
 
                         _ => {
