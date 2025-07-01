@@ -4,14 +4,18 @@ use eval::eval;
 use types::{sym_tab, symbol};
 use lisp_parser::LispProgramParsingResult;
 use generator::Final_out;
+use std::collections::HashSet;
+use std::fs::File;
 
-fn main() {
+fn main() -> io::Result<()>{
     let mut prog: Program = Program::new();
     let mut symtab: sym_tab = sym_tab::new();
-    let mut out = io::stdout().lock();
+    let mut out: Vec<u8> = Vec::new();
     let mut comp_result = Final_out{
         outbuf: out,
-        watchlist: Vec::new()
+        watchlist: Vec::new(),
+        created_files: HashSet::new(),
+        dir_created: false
     };
 
     prog.read_n_parse();
@@ -20,10 +24,22 @@ fn main() {
         eval(lprog, &mut symtab, &mut comp_result);
     }
 
-    println!("Signal Watchlist:");
-    for strs in comp_result.watchlist{
-        println!("{}", strs);
+    let generated = String::from_utf8(comp_result.outbuf).expect("failed to convert vec<u8> to string");
+
+    let mut final_makefile = String::new();
+    final_makefile.push_str(".PHONY: ");
+
+    for line in &comp_result.watchlist {
+        final_makefile.push_str(&format!("{} ", line));
     }
+    final_makefile.push('\n');
+
+    final_makefile.push_str(&generated);
+
+    let mut file = File::create("./fsig/Makefile")?;
+    file.write_all(final_makefile.as_bytes())?;
+
+    Ok(())
 
 }
 

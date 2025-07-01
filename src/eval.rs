@@ -110,10 +110,13 @@ fn apply<W: Write>(op: &str, list: &Vec<LispObject>, env: &mut sym_tab, buf: &mu
     match op {
         "circ" => {
             for s in symvec {
-                buf.watchlist.push(s.literal.unwrap());
+                if let Some(slit) = s.literal {
+                    buf.watchlist.push(slit);
+                }
             }
             for regs in env.get_all_regs() {
-                buf.watchlist.push(regs.literal.clone().unwrap());
+                buf.watchlist.push(regs.literal.clone().unwrap() + &"_d");
+                buf.watchlist.push(regs.literal.clone().unwrap() + &"_q");
             }
             finalize(env, buf);
             symbol{
