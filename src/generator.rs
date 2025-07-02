@@ -166,7 +166,7 @@ fn gen_conn_w2d<W: Write>(parm1: &symbol, parm2: &symbol,env: &sym_tab, buf: &mu
     let template = 
     "\n{}: {}
 \t@{}_val=$$(head -n 1 {}); \\
-\techo $${}_val > {} \\
+\techo $${}_val > {}; \\
 \tod -An -N4 -tu4 /dev/urandom | tr -d ' ' > {} \\
         \n";
     let osym = symbol{
@@ -254,6 +254,96 @@ fn gen_conn_w2w<W: Write>(parm1: &symbol, parm2: &symbol, env: &sym_tab, buf: &m
     osym
 }
 
+
+fn gen_conn_d2w<W: Write>(parm1: &symbol, parm2: &symbol, env: &sym_tab, buf: &mut Final_out<W>) -> symbol{
+    let template = 
+    "\n{}: {}
+\t@{}_val=$$(head -n 1 {}); \\
+\tresult=$$(({}_val)); \\
+\techo $$result > {}
+        \n";
+    let osym = symbol{
+        literal : parm1.literal.clone(),
+        typ : rtl_types::wire,
+        val : None
+    };
+    let p2str = match parm2.typ {
+        rtl_types::dff => parm2.literal.clone().unwrap() + &"_q",
+        _ => {
+            println!("Failed to generate for {}", parm2.literal.as_ref().unwrap());
+            panic!();
+        }
+    };
+
+    let ostr = match parm1.typ {
+        rtl_types::wire => parm1.literal.clone().unwrap(),
+        rtl_types::dff => {
+            println!("Output to dff is not possible in wire assignment :(");
+            panic!();
+        },
+        _ => {
+            println!("Failed to generate for {}", osym.literal.as_ref().unwrap());
+            panic!();
+        }
+    };
+
+    let out = format_template(&template, 
+        &[&ostr, &p2str,
+        &p2str, &p2str,
+        &p2str,
+        &ostr]);
+
+    let _ = write!(buf.outbuf, "{}", out);
+
+    create_file(&ostr, buf);
+    create_file(&p2str, buf);
+
+    osym
+}
+
+
+fn gen_conn_d2d<W: Write>(parm1: &symbol, parm2: &symbol, env: &sym_tab, buf: &mut Final_out<W>) -> symbol{
+    let template = 
+    "\n{}: {}
+\t@{}_val=$$(head -n 1 {}); \\
+\tresult=$$(({}_val)); \\
+\techo $$result > {}
+        \n";
+    let osym = symbol{
+        literal : None,
+        typ : rtl_types::nodef,
+        val : None
+    };
+    let p2str = match parm2.typ {
+        rtl_types::dff => parm2.literal.clone().unwrap() + &"_q",
+        _ => {
+            println!("Failed to generate for {}", parm2.literal.as_ref().unwrap());
+            panic!();
+        }
+    };
+
+    let ostr = match parm1.typ {
+        rtl_types::dff => parm1.literal.clone().unwrap() + &"_d",
+        _ => {
+            println!("Failed to generate for {}", osym.literal.as_ref().unwrap());
+            panic!();
+        }
+    };
+
+    let out = format_template(&template, 
+        &[&ostr, &p2str,
+        &p2str, &p2str,
+        &p2str,
+        &ostr]);
+
+    let _ = write!(buf.outbuf, "{}", out);
+
+    create_file(&ostr, buf);
+    create_file(&p2str, buf);
+
+    osym
+}
+
 pub fn circgen<W: Write>(
     op: &str,
     invec: &Vec<symbol>,
@@ -270,11 +360,27 @@ pub fn circgen<W: Write>(
         }
 
         "conn" => {
-            if let rtl_types::wire = &invec[0].typ {
-                gen_conn_w2w(&invec[0], &invec[1], env, buf)
-            } else {
-                gen_conn_w2d(&invec[0], &invec[1], env, buf)
+            match (&invec[0].typ, &invec[1].typ) {
+                (rtl_types::wire, rtl_types::wire) => {
+                    gen_conn_w2w(&invec[0], &invec[1], env, buf)
+                }
+                (rtl_types::dff, rtl_types::wire) => {
+                    gen_conn_w2d(&invec[0], &invec[1], env, buf)
+                }
+                (rtl_types::wire, rtl_types::dff) => {
+                    gen_conn_d2w(&invec[0], &invec[1], env, buf)
+                }
+                (rtl_types::dff, rtl_types::dff) => {
+                    println!("dff to dff connection is not supported");
+                    panic!();
+                    // gen_conn_d2d(&invec[0], &invec[1], env, buf)
+                }
+                _ => {
+                    println!("Unsupported type been used in conn");
+                    panic!();
+                }
             }
+
         }
 
         _ => {
