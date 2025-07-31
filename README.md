@@ -6,6 +6,8 @@ This project leverages GNU Make to detect file dependencies and modification tim
 To keep things simple and minimal, the input is not written in Verilog, but instead in a Lisp-like DSL tailored for this purpose.
 
 An example of this idea is included in the example/ directory — a simple up-counter circuit that increments by 1.
+
+More details can be found in this post: [Makesim](https://bigjr-mkkong.github.io/2025/07/22/makesim.html)
 ### Language Specification
 
 This compiler does not support full Lisp, but it borrows several core ideas from it.
